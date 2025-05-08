@@ -1,0 +1,35 @@
+<project name="JLOX Intepreter" default="run" basedir=".">
+    <!-- Directories-->
+    <property name="src.dir" value="lox"/>
+    <property name="build.dir" value="build"/>
+
+    <!-- Creating required directories-->
+    <target name="init">
+        <mkdir dir="${build.dir}"/>
+    </target>
+
+    <!-- Compiling the source files-->
+    <target name="compile" depends="init">
+    <javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime="false">
+        <classpath>
+            <path>
+                <pathelement path="${build.dir}"/>
+            </path>
+        </classpath>
+    </javac>
+    </target>
+
+    <!-- Running the Lox class-->
+    <target name="run" depends="compile">
+        <java classname="lox.Lox" fork="true">
+            <classpath>
+                <pathelement path="${build.dir}"/>
+            </classpath>
+        </java>
+    </target>
+
+    <!-- Clean up the build-->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+</project>
