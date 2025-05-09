@@ -7,7 +7,7 @@ import java.util.Map;
 
 import lox.TokenType;
 
-public class Scanner 
+public class Lexer 
 {
     private final String m_source;
     private final List<Token> m_tokens = new ArrayList<>();
@@ -36,11 +36,11 @@ public class Scanner
         m_keywords.put("var",    TokenType.VAR);
         m_keywords.put("while",  TokenType.WHILE);
     }
-    Scanner(String l_source)
+
+    Lexer(String l_source)
     {
         this.m_source = l_source;
     }
-
     /**
      * 
      * @return A list of tokens for parser to process
