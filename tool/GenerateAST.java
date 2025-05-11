@@ -35,11 +35,13 @@ public class GenerateAST
         String path = outputDir + "/" + baseName +".java";
         PrintWriter writer = new PrintWriter(path,"UTF-8");
 
-        writer.println("package lox");
+        writer.println("package lox;");
         writer.println();
-        writer.println("import java.utils.List");
+        writer.println("import java.util.List;");
         writer.println();
         writer.println("abstract class " + baseName + "{");
+
+        defineVisitor(writer,baseName,types);
 
         for(String type : types)
         {
@@ -47,7 +49,8 @@ public class GenerateAST
             String fields = type.split(":")[1].trim();
             defineType(writer,baseName,className,fields);
         }
-
+        writer.println();
+        writer.println("  abstract <R> R accept(Visitor<R> visitor);");
         writer.println("}");
         writer.close();
     }
@@ -73,12 +76,33 @@ public class GenerateAST
         }
 
         writer.println("    }");
-
+        //now we define the visitor pattern
+        writer.println();
+        writer.println("    @Override");
+        writer.println("    <R> R accept(Visitor<R> visitor) {");
+        writer.println("    return visitor.visit" + 
+        className + baseName + "(this);");
+        writer.println("    }");
         //now we define the field in the class
         writer.println();
         for(String field : fields)
         {
             writer.println("    final " + field + ";");
+        }
+
+        writer.println("  }");
+    }
+
+    private static  void defineVisitor(
+        PrintWriter writer,String baseName, List<String> types)
+    {
+        writer.println("  interface Visitor<R> {");
+
+        for(String type : types)
+        {
+            String typeName = type.split(":")[0].trim();
+            writer.println("    R visit" + typeName + baseName + "(" +
+            typeName + " " + baseName.toLowerCase() + ");");
         }
 
         writer.println("  }");
