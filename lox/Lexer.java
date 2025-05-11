@@ -102,6 +102,7 @@ public class Lexer
                 {
                     addToken(TokenType.SLASH);
                 }
+                break;
             case '"' : string();break;
 
             default : 
