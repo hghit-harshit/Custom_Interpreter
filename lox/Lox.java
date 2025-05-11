@@ -2,7 +2,7 @@
 package lox;
 
 import java.io.BufferedReader;
-import java.io.IO;
+//import java.io.IO;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
@@ -56,14 +56,20 @@ public class Lox
 
     private static void run(String source)
     {
-        Scanner scanner = new Scanner(source);
+        Lexer scanner = new Lexer(source);
         List<Token> tokens = scanner.scanTokens();
 
-        // Just printing the tokens for now
         for(Token token : tokens)
         {
-            System.out.println(token);
+            System.out.println(token.m_type);
         }
+        Parser parser = new Parser(tokens);
+        Expr expression = parser.parse();
+
+        // Just printing the tokens for now
+        
+
+        System.out.println(new ASTPrinter().print(expression));
     }
 
     static void error(int l_line, String l_message)
@@ -76,5 +82,17 @@ public class Lox
         System.err.println(
             "line[" + l_line +"] Error" + l_where + ": " + l_message);
         m_hadError = true;
+    }
+
+    static void error(Token l_token, String l_message)
+    {
+        if(l_token.m_type == TokenType.EOF)
+        {
+            report(l_token.m_line, " at end", l_message);
+        }
+        else
+        {
+            report(l_token.m_line, " at " + l_token.m_lexeme + "'", l_message);
+        }
     }
 }

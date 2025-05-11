@@ -21,7 +21,7 @@
 
     <!-- Running the Lox class-->
     <target name="run" depends="compile">
-        <java classname="lox.Lox" fork="true">
+        <java classname="lox.Lox" fork="false">
             <classpath>
                 <pathelement path="${build.dir}"/>
             </classpath>

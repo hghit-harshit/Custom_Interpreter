@@ -1,10 +1,10 @@
 package lox;
 
 public class Token {
-    final TokenType m_type;
-    final String m_lexeme;
-    final Object m_literal;
-    final int m_line;
+    final TokenType m_type; // type of the token
+    final String m_lexeme; // the lexeme of the token
+    final Object m_literal; // literal is the token has a literal
+    final int m_line; // the line wehere we see the lexeme
 
     Token(TokenType l_type, String l_lexeme, Object l_literal, int l_line)
     {
