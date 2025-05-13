@@ -14,7 +14,9 @@ import java.util.List;
 
 public class Lox
 {
+    private static final Interpreter m_interpreter = new Interpreter();
     static boolean m_hadError;
+    static boolean m_hadRuntimeError;
     public static void main(String[] args) throws IOException
     {
         if (args.length > 1)
@@ -37,12 +39,13 @@ public class Lox
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
         if(m_hadError) System.exit(65);
+        if(m_hadRuntimeError) System.exit(70);
     }
 
     private static void runPrompt() throws IOException
     {
         InputStreamReader input = new InputStreamReader(System.in);
-        BufferedReader reader = new BufferedReader(input);
+        BufferedReader reader   = new BufferedReader(input);
 
         while(true)
         {
@@ -67,9 +70,10 @@ public class Lox
         Expr expression = parser.parse();
 
         // Just printing the tokens for now
-        
-
         System.out.println(new ASTPrinter().print(expression));
+        if(m_hadError)return;
+
+        m_interpreter.interpret(expression);
     }
 
     static void error(int l_line, String l_message)
@@ -94,5 +98,12 @@ public class Lox
         {
             report(l_token.m_line, " at " + l_token.m_lexeme + "'", l_message);
         }
+    }
+
+    static void runtimeError(RuntimeError l_error)
+    {
+        System.err.println(l_error.getMessage() + 
+        "\n[line " + l_error.m_token.m_line + "]");
+        m_hadRuntimeError = true;
     }
 }
