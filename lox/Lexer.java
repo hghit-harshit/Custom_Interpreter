@@ -5,12 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lox.TokenType;
+//import lox.TokenType;
 
 public class Lexer 
 {
-    private final String m_source;
-    private final List<Token> m_tokens = new ArrayList<>();
+    private final String m_source; // source file 
+    private final List<Token> m_tokens = new ArrayList<>(); // list of tokens
     private int m_start = 0; // to track start of a lexeme
     private int m_current = 0; // to track current position in lexeme
     private int m_line = 1; // to track line we are in
@@ -42,7 +42,6 @@ public class Lexer
         this.m_source = l_source;
     }
     /**
-     * 
      * @return A list of tokens for parser to process
      */
     List<Token> scanTokens()
@@ -132,6 +131,7 @@ public class Lexer
 
     private void addToken(TokenType l_type)
     {
+        // as you can see we are overloading by arguments
         addToken(l_type,null);
     }
 
