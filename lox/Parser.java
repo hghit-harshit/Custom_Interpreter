@@ -1,7 +1,7 @@
 package lox;
 
 import java.util.List;
-
+import java.util.ArrayList;
 
 import lox.TokenType;
 
@@ -20,20 +20,115 @@ public class Parser
 
     //this is the entry point of parsing the tokens
     // our descent begin from here
-    Expr parse()
+    List<Stmt> parse()
+    {
+        // try
+        // {
+        //     return expression();
+        // }
+        // catch(ParseError error)
+        // {
+        //     return null;
+        // }
+
+        List<Stmt> statements = new ArrayList<>();
+        
+        while(!isAtEnd())
+        {
+            statements.add(declaration());
+        }
+
+        return statements;
+    }
+
+    private Stmt declaration()
     {
         try
         {
-            return expression();
+            if(match(TokenType.VAR)) return varDeclaration();
+
+            return statement();
         }
         catch(ParseError error)
         {
+            synchronize();
             return null;
         }
     }
+
+    private Stmt varDeclaration()
+    {
+        Token name = consume(TokenType.IDENTIFIER, "Expect variable name.");
+
+        Expr initializer = null;
+        if(match(TokenType.EQUAL))
+        {
+            initializer = expression();
+        }
+
+        consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
+
+        return new Stmt.Var(name, initializer);
+    }
+
+    private Stmt statement()
+    {
+        if(match(TokenType.PRINT)) return printStatement();
+        if(match(TokenType.LEFT_BRACE)) return new Stmt.Block(block());
+        //else
+        return expressionStatement();
+    }
+
+    private Stmt printStatement()
+    {
+        Expr value = expression();
+        consume(TokenType.SEMICOLON, "Expect ';' after value.");
+        return new Stmt.Print(value);
+    }
+
+    private List<Stmt> block()
+    {
+        List<Stmt> statements = new ArrayList<>();
+
+        while(!check(TokenType.RIGHT_BRACE) && !isAtEnd())
+        {
+            statements.add(declaration());
+        }
+
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after a block");
+        return statements;
+    }
+    private Stmt expressionStatement()
+    {
+        Expr expr = expression();
+        consume(TokenType.SEMICOLON,"Expect ';' after the expression.");
+        return new Stmt.Expression(expr);
+    }
     private Expr expression()
     {
-        return equality();
+        return assignment();
+    }
+    // assigning a new value to a previously defined variable
+    private Expr assignment()
+    {
+        Expr expr = equality();
+        // if we are reassining
+        // and if the syntax is corrent this expr would be an identifier(varialbe)
+        if(match(TokenType.EQUAL))
+        {
+            Token equals = previous();
+            Expr value = assignment();
+
+            if(expr instanceof Expr.Variable)
+            {
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name, value);
+            }
+
+            error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
     }
 
     //equality → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -117,6 +212,10 @@ public class Parser
         {
             return new Expr.Literal(previous().m_literal);
         }
+        if(match(TokenType.IDENTIFIER))
+        {
+            return new Expr.Variable(previous());
+        }
         if(match(TokenType.LEFT_PAREN))
         {
             Expr l_expr = expression();
@@ -158,6 +257,7 @@ public class Parser
 
     /**
      * consumes the current token and returns it
+     * that is increase the current token counter
      */
     private Token advance()
     {
@@ -170,6 +270,10 @@ public class Parser
         return peek().m_type == TokenType.EOF;
     }
 
+    /**
+     * 
+     * @return Next token
+     */
     private Token peek()
     {
         return m_tokens.get(m_current);
@@ -197,4 +301,28 @@ public class Parser
         return new ParseError();
     }
 
+    private void synchronize()
+    {
+        advance();
+
+        while(!isAtEnd())
+        {
+            if(previous().m_type == TokenType.SEMICOLON) return;
+            
+            switch(peek().m_type)
+            {
+                case TokenType.CLASS :
+                case TokenType.FUN:
+                case TokenType.VAR:
+                case TokenType.FOR:
+                case TokenType.IF:
+                case TokenType.WHILE:
+                case TokenType.PRINT:
+                case TokenType.RETURN: 
+                return;
+            }
+
+            advance();
+        }
+    }
 } 
