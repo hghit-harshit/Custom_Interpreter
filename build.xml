@@ -2,6 +2,7 @@
     <!-- Directories-->
     <property name="src.dir" value="lox"/>
     <property name="build.dir" value="build"/>
+    <property name="tool.dir" value="tool"/>
 
     <!-- Creating required directories-->
     <target name="init">
@@ -27,6 +28,22 @@
             </classpath>
         </java>
     </target>
+
+    <!--Compiling the GenerateAST class-->
+    <target name="compile_tool">
+        <javac srcdir="${tool.dir}" destdir="${tool.dir}" includeantruntime="false">
+            <classpath path="${tool.dir}"/>
+        </javac>
+    </target>
+
+    <!--Running the GenerateAST class-->
+    <target name="run_tool" depends="compile_tool">
+        <java classname="tool.GenerateAST" fork="false">
+            <classpath path="${tool.dir}"/>
+            <arg line="${arg}"/>
+        </java>
+    </target>
+
 
     <!-- Clean up the build-->
     <target name="clean">
