@@ -31,7 +31,7 @@
 
     <!--Compiling the GenerateAST class-->
     <target name="compile_tool">
-        <javac srcdir="${tool.dir}" destdir="${tool.dir}" includeantruntime="false">
+        <javac srcdir="${tool.dir}" destdir="." includeantruntime="false">
             <classpath path="${tool.dir}"/>
         </javac>
     </target>
@@ -39,7 +39,10 @@
     <!--Running the GenerateAST class-->
     <target name="run_tool" depends="compile_tool">
         <java classname="tool.GenerateAST" fork="false">
-            <classpath path="${tool.dir}"/>
+            <classpath>
+                <pathelement path="."/>
+                <pathelement path="${tool.dir}"/>
+            </classpath>
             <arg line="${arg}"/>
         </java>
     </target>
