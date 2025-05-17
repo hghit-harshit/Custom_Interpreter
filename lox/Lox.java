@@ -17,6 +17,7 @@ public class Lox
     private static final Interpreter m_interpreter = new Interpreter();
     static boolean m_hadError;
     static boolean m_hadRuntimeError;
+    static boolean m_repl;
     public static void main(String[] args) throws IOException
     {
         if (args.length > 1)
@@ -46,7 +47,7 @@ public class Lox
     {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader   = new BufferedReader(input);
-
+        m_repl = true;
         while(true)
         {
             System.out.print("> ");
@@ -69,9 +70,18 @@ public class Lox
         Parser parser = new Parser(tokens);
         List<Stmt> statements = parser.parse();
 
+        // this is such a hack 
+        if(statements.size() == 1 && statements.get(0) instanceof Stmt.Expression)
+        {
+            // we know that in top leve is user is entering just an epression then
+            // it would statements would have just that
+            // oh my lord this is soo hacky i am so sorry
+            m_interpreter.evaluatePrint((Stmt.Expression)statements.get(0));
+            return;
+        }
         // Just printing the tokens for now
         // System.out.println(new ASTPrinter().print(expression));
-        // if(m_hadError)return;
+        //if(m_hadError)return;
 
         m_interpreter.interpret(statements);
     }
