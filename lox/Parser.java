@@ -46,7 +46,7 @@ public class Parser
         try
         {
             if(match(TokenType.VAR)) return varDeclaration();
-
+            //else
             return statement();
         }
         catch(ParseError error)
@@ -73,10 +73,29 @@ public class Parser
 
     private Stmt statement()
     {
+        if(match(TokenType.IF)) return IfStatement(); 
         if(match(TokenType.PRINT)) return printStatement();
         if(match(TokenType.LEFT_BRACE)) return new Stmt.Block(block());
         //else
         return expressionStatement();
+    }
+
+    // if (condition) stmt1 else stm2;
+    // i was thiking of adding curly braces but well see to that later
+    private Stmt IfStatement()
+    {
+        consume(TokenType.LEFT_PAREN, "Expect '(' after if");
+        Expr condition = expression();
+        consume(TokenType.RIGHT_PAREN,"Expect ')' after if condition");
+
+        Stmt thenBranch = statement();
+        Stmt elseBranch = null;
+        if(match(TokenType.ELSE))
+        {
+            elseBranch = statement();
+        }
+
+        return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
     private Stmt printStatement()
@@ -111,7 +130,7 @@ public class Parser
     // assigning a new value to a previously defined variable
     private Expr assignment()
     {
-        Expr expr = equality();
+        Expr expr = or();
         // if we are reassining
         // and if the syntax is corrent this expr would be an identifier(varialbe)
         if(match(TokenType.EQUAL))
@@ -131,6 +150,33 @@ public class Parser
         return expr;
     }
 
+    private Expr or()
+    {
+        Expr expr = and();
+
+        while(match(TokenType.OR))
+        {
+            Token operator = previous();
+            Expr right = and();
+            
+            expr = new Expr.Logical(expr, operator, right);
+        }
+
+        return expr;
+    }
+
+    private Expr and()
+    {
+        Expr expr = equality();
+
+        while(match(TokenType.AND))
+        {
+            Token operator = previous();
+            Expr right = equality();
+            expr = new Expr.Logical(expr, operator, right);
+        }
+        return expr;
+    }
     //equality → comparison ( ( "!=" | "==" ) comparison )* ;
     private Expr equality()
     {
@@ -320,6 +366,7 @@ public class Parser
                 case TokenType.PRINT:
                 case TokenType.RETURN: 
                 return;
+                default:
             }
 
             advance();

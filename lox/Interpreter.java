@@ -101,11 +101,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
         return evaluate(expr.expression);
     }
 
-    private Object evaluate(Expr expr)
-    {
-        return expr.accept(this);
-    }
-
     @Override
     public Void  visitExpressionStmt(Stmt.Expression stmt)
     {
@@ -154,6 +149,49 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
     {
         executeBlock(stmt.statements, new Environment(environment));
         return null;
+    }
+
+    @Override
+    public Void visitIfStmt(Stmt.If stmt)
+    {
+        if(isTruthy(evaluate(stmt.condition)))
+        {
+            execute(stmt.thenBranch);
+        }
+        else if(stmt.elseBranch != null)
+        {
+            execute(stmt.elseBranch);
+        }
+
+        return null;
+    }
+
+    @Override
+    public Object visitLogicalExpr(Expr.Logical expr)
+    {
+        Object left = evaluate(expr.left);
+
+        if(expr.operator.m_type == TokenType.OR)
+        {
+            if(isTruthy(left)) return left;
+        }
+        else
+        {
+            if(!isTruthy(left)) return left;
+        }
+
+        return evaluate(expr.right);
+    }
+    public void evaluatePrint(Stmt.Expression stmt)
+    {
+        Expr expr = stmt.expression;
+        Object value = evaluate(expr);
+        System.out.println(stringify(value));
+    }
+
+    private Object evaluate(Expr expr)
+    {
+        return expr.accept(this);
     }
 
     private void execute(Stmt stmt)
