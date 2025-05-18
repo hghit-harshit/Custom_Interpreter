@@ -182,6 +182,18 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>
 
         return evaluate(expr.right);
     }
+
+    @Override
+    public Void visitWhileStmt(Stmt.While stmt)
+    {
+        // this is so anticlimatic
+        // we just put a wrapper around the while of java so lame
+        while(isTruthy(evaluate(stmt.condition)))
+        {
+            execute(stmt.body);
+        }
+        return null;
+    }
     public void evaluatePrint(Stmt.Expression stmt)
     {
         Expr expr = stmt.expression;
