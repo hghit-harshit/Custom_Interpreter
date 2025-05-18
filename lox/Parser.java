@@ -2,6 +2,7 @@ package lox;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import lox.TokenType;
 
@@ -73,11 +74,21 @@ public class Parser
 
     private Stmt statement()
     {
-        if(match(TokenType.IF)) return IfStatement(); 
         if(match(TokenType.PRINT)) return printStatement();
+        if(match(TokenType.IF)) return IfStatement(); 
+        if(match(TokenType.FOR)) return ForStatement();
+        if(match(TokenType.WHILE)) return WhileStatement();
         if(match(TokenType.LEFT_BRACE)) return new Stmt.Block(block());
+
         //else
         return expressionStatement();
+    }
+
+    private Stmt printStatement()
+    {
+        Expr value = expression();
+        consume(TokenType.SEMICOLON, "Expect ';' after value.");
+        return new Stmt.Print(value);
     }
 
     // if (condition) stmt1 else stm2;
@@ -98,11 +109,85 @@ public class Parser
         return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
-    private Stmt printStatement()
+    // we are goint to 'desugar' for loop to while loop
+    // meaning we are not goin to write a new syntax node for 'for loop'
+    // we'll just delegate its work to while loop which we have already implemented
+    private Stmt ForStatement()
     {
-        Expr value = expression();
-        consume(TokenType.SEMICOLON, "Expect ';' after value.");
-        return new Stmt.Print(value);
+        consume(TokenType.LEFT_PAREN,"Expect '(' after 'for'.");
+
+        Stmt initializer;
+        if(match(TokenType.SEMICOLON))
+        {
+            initializer = null;
+        }
+        else if(match(TokenType.VAR))
+        {
+            initializer = varDeclaration();
+        }
+        else
+        {
+            initializer = expressionStatement();
+        }
+
+        Expr condition = null;
+        // we are cheking and not matching because the first semicolon
+        // is already eaten up so if the next token is not 
+        // a semicolon then it must be the condition and we consume the condition
+        // if it is a semicolon the the condition is ommitted
+        if(!check(TokenType.SEMICOLON))
+        {
+            condition = expression();
+        }
+
+        // now we consume the second semicolon
+        consume(TokenType.SEMICOLON, "Expect ';' after loop condition.");
+
+
+        Expr increment = null;
+        // we do the same as we did for checking if the condition is ommitted 
+        // for increment
+        if(!check(TokenType.LEFT_PAREN))
+        {
+            increment = expression();
+        }
+        consume(TokenType.RIGHT_PAREN, "Expect ')' after for clause.");
+
+        // now all that is left is the body
+        Stmt body = statement();
+
+        // if in not null we then we wrap body and increment in a block
+        // we are basically adding increment to the end of the body
+        if(increment != null)
+        {
+            body = new Stmt.Block(
+                Arrays.asList(body, new Stmt.Expression(increment)));
+        }
+
+        // if user skipped condition then we assuem that the condition
+        // is always true
+        if(condition  == null) condition = new Expr.Literal(true);
+        // then we build the loop using while loop 
+        body = new Stmt.While(condition,body);
+
+        // at last if we have the initialiser 
+        // then we put it before the while loop
+        if(initializer != null)
+        {
+            body = new Stmt.Block(Arrays.asList(initializer,body));
+        }
+        
+        return body;
+    }
+
+    private Stmt WhileStatement()
+    {
+        consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+        Expr condition = expression();
+        consume(TokenType.RIGHT_PAREN, "Expect ')' after condition");
+        Stmt body = statement();
+
+        return new Stmt.While(condition, body);
     }
 
     private List<Stmt> block()
